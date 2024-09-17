@@ -300,6 +300,9 @@ function Main_block() {
         }
     });
 
+
+    
+
     return (
         <Box>
             {/* AppBar с заголовком */}
