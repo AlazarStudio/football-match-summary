@@ -272,10 +272,11 @@ function Main_block() {
 
         // Копируем в буфер обмена
         navigator.clipboard.writeText(matchStats).then(() => {
-            alert('Статистика матча скопирована в буфер обмена.');
+            // alert('Статистика матча скопирована в буфер обмена.');
 
             // Открываем Telegram с предзаполненным сообщением
-            const telegramUrl = `https://t.me/share/url?url=&text=${encodeURIComponent(matchStats)}`;
+            // const telegramUrl = `https://t.me/share/url?@urtenovcom=&text=${encodeURIComponent(matchStats)}`;
+            const telegramUrl = `https://web.telegram.org/#/im?p=@urtenovcom&text=${encodeURIComponent(matchStats)}`;
             window.open(telegramUrl, '_blank');
         }, (err) => {
             console.error('Ошибка при копировании в буфер обмена: ', err);
