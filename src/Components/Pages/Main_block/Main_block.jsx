@@ -35,12 +35,13 @@ function Main_block() {
 
     const initialState = initializeState();
 
+    // Объявление состояний
     const [matchStarted, setMatchStarted] = useState(initialState ? initialState.matchStarted : false);
     const [timer, setTimer] = useState(initialState ? initialState.timer : 0);
     const [halves, setHalves] = useState(initialState ? initialState.halves : 2);
-    const [halfDuration, setHalfDuration] = useState(initialState ? initialState.halfDuration : 45);
-    const [teamAName, setTeamAName] = useState(initialState ? initialState.teamAName : 'Команда А');
-    const [teamBName, setTeamBName] = useState(initialState ? initialState.teamBName : 'Команда Б');
+    const [halfDuration, setHalfDuration] = useState(initialState ? initialState.halfDuration : 25);
+    const [teamAName, setTeamAName] = useState(initialState ? initialState.teamAName : '');
+    const [teamBName, setTeamBName] = useState(initialState ? initialState.teamBName : '');
     const [events, setEvents] = useState(initialState ? initialState.events : []);
     const [showModal, setShowModal] = useState(false);
     const [currentEvent, setCurrentEvent] = useState({});
@@ -52,6 +53,7 @@ function Main_block() {
     const [matchStartTime, setMatchStartTime] = useState(initialState ? initialState.matchStartTime : null);
     const [inExtraTime, setInExtraTime] = useState(initialState ? initialState.inExtraTime : false);
     const [halfEnded, setHalfEnded] = useState(initialState ? initialState.halfEnded : false);
+    const [matchEnded, setMatchEnded] = useState(initialState ? initialState.matchEnded : false);
 
     // Сохранение состояния в localStorage при его изменении
     useEffect(() => {
@@ -70,8 +72,9 @@ function Main_block() {
             currentHalf,
             inExtraTime,
             halfEnded,
+            matchEnded,
         }));
-    }, [matchStarted, timer, elapsedTime, matchStartTime, halves, halfDuration, teamAName, teamBName, events, extraTime, totalMatchTime, currentHalf, inExtraTime, halfEnded]);
+    }, [matchStarted, timer, elapsedTime, matchStartTime, halves, halfDuration, teamAName, teamBName, events, extraTime, totalMatchTime, currentHalf, inExtraTime, halfEnded, matchEnded]);
 
     // Обновление таймера и логика управления матчем
     useEffect(() => {
@@ -108,12 +111,22 @@ function Main_block() {
         }
     }, [matchStarted]);
 
+    // Функция для обработки события
     const handleEvent = (type, team) => {
         const currentTime = timer;
-        const mainTimeMinutes = Math.floor(Math.min(currentTime, halfDuration * 60) / 60);
-        const mainTimeSeconds = Math.min(currentTime, halfDuration * 60) % 60;
-        const extraTimeMinutes = inExtraTime ? Math.floor((currentTime - halfDuration * 60) / 60) : 0;
-        const extraTimeSeconds = inExtraTime ? (currentTime - halfDuration * 60) % 60 : 0;
+        // Суммарная длительность предыдущих таймов, кроме первого
+        const previousHalvesDuration = (currentHalf > 1) ? (currentHalf - 1) * halfDuration * 60 : 0;
+
+        // Вычисление времени события с учетом предыдущих таймов
+        const adjustedTimeInSeconds = previousHalvesDuration + Math.min(currentTime, halfDuration * 60);
+
+        const mainTimeMinutes = Math.floor(adjustedTimeInSeconds / 60);
+        const mainTimeSeconds = adjustedTimeInSeconds % 60;
+
+        // Вычисление минут и секунд дополнительного времени
+        const extraTimeSecondsTotal = inExtraTime ? (currentTime - halfDuration * 60) : 0;
+        const extraTimeMinutes = Math.floor(extraTimeSecondsTotal / 60);
+        const extraTimeSeconds = extraTimeSecondsTotal % 60;
 
         setCurrentEvent({
             type,
@@ -125,12 +138,14 @@ function Main_block() {
         setShowModal(true);
     };
 
+    // Функция для сохранения события
     const saveEvent = (e) => {
         e.preventDefault();
         setEvents([...events, currentEvent]);
         setShowModal(false);
     };
 
+    // Стили кнопок
     const commonButtonStyle = {
         mt: 1,
         width: '100%',
@@ -141,6 +156,7 @@ function Main_block() {
         padding: '6px 16px',
     };
 
+    // Функция для отрисовки кнопки действия
     const renderActionButton = (iconSrc, label, onClick) => (
         <Button
             variant="outlined"
@@ -152,18 +168,25 @@ function Main_block() {
         </Button>
     );
 
+    // Функция для начала матча
     const startMatch = () => {
-        setTotalMatchTime(halves * halfDuration * 60);
-        setMatchStarted(true);
-        setHalfEnded(false);
-        setCurrentHalf(1);
-        setTimer(0);
-        setElapsedTime(0);
-        setExtraTime(0);
-        setInExtraTime(false);
-        setMatchStartTime(Date.now());
+        if (halves && halfDuration && teamAName && teamBName) {
+            setTotalMatchTime(halves * halfDuration * 60);
+            setMatchStarted(true);
+            setHalfEnded(false);
+            setCurrentHalf(1);
+            setTimer(0);
+            setElapsedTime(0);
+            setExtraTime(0);
+            setInExtraTime(false);
+            setMatchStartTime(Date.now());
+            setMatchEnded(false);
+        } else {
+            alert('Заполните все поля')
+        }
     };
 
+    // Функция для начала следующего тайма
     const startNextHalf = () => {
         setMatchStarted(true);
         setHalfEnded(false);
@@ -174,6 +197,7 @@ function Main_block() {
         setMatchStartTime(Date.now());
     };
 
+    // Функция для завершения тайма
     const finishHalf = () => {
         setMatchStarted(false);
         setInExtraTime(false);
@@ -184,8 +208,8 @@ function Main_block() {
         if (currentHalf < halves) {
             setCurrentHalf(prevHalf => prevHalf + 1);
         } else {
-            alert('Матч окончен');
-            finishMatch();
+            // Устанавливаем, что матч завершен
+            setMatchEnded(true);
         }
     };
 
@@ -199,28 +223,91 @@ function Main_block() {
         setElapsedTime(0);
         setMatchStartTime(null);
         setHalves(2);
-        setHalfDuration(45);
-        setTeamAName('Команда А');
-        setTeamBName('Команда Б');
+        setHalfDuration(25);
+        setTeamAName('');
+        setTeamBName('');
         setEvents([]);
         setExtraTime(0);
         setTotalMatchTime(0);
         setCurrentHalf(1);
         setInExtraTime(false);
         setHalfEnded(false);
-        alert('Матч завершен');
+        setMatchEnded(false);
+        // alert('Матч завершен');
     };
+
+    // Функция для копирования статистики и отправки в Telegram
+    const shareMatchStats = () => {
+        // Вычисление счета
+        let teamAScore = 0;
+        let teamBScore = 0;
+
+        events.forEach(event => {
+            if (event.type === 'Гол') {
+                if (event.team === teamAName) {
+                    teamAScore += 1;
+                } else if (event.team === teamBName) {
+                    teamBScore += 1;
+                }
+            }
+        });
+
+        // Формируем текст со статистикой матча
+        let matchStats = `Матч между ${teamAName} и ${teamBName}\n`;
+        matchStats += `Счет: ${teamAScore} : ${teamBScore}\n\nСобытия:\n`;
+
+        events.forEach(event => {
+            matchStats += `${event.time}${event.extraTime ? ` + ${event.extraTime}` : ''} - Тайм ${event.half} - ${event.team}\n`;
+            matchStats += `${event.type} — `;
+            if (event.type === 'Замена') {
+                matchStats += `Ушел: ${event.playerOut}, Вошел: ${event.playerIn}\n`;
+            } else {
+                matchStats += `${event.player}\n`;
+            }
+            if (event.assistant) {
+                matchStats += `(Ассистент: ${event.assistant})\n`;
+            }
+            matchStats += '\n';
+        });
+
+        // Копируем в буфер обмена
+        navigator.clipboard.writeText(matchStats).then(() => {
+            alert('Статистика матча скопирована в буфер обмена.');
+
+            // Открываем Telegram с предзаполненным сообщением
+            const telegramUrl = `https://t.me/share/url?url=&text=${encodeURIComponent(matchStats)}`;
+            window.open(telegramUrl, '_blank');
+        }, (err) => {
+            console.error('Ошибка при копировании в буфер обмена: ', err);
+        });
+    };
+
+    // Вычисляем счет для отображения
+    let teamAScore = 0;
+    let teamBScore = 0;
+
+    events.forEach(event => {
+        if (event.type === 'Гол') {
+            if (event.team === teamAName) {
+                teamAScore += 1;
+            } else if (event.team === teamBName) {
+                teamBScore += 1;
+            }
+        }
+    });
 
     return (
         <Box>
+            {/* AppBar с заголовком */}
             <AppBar position="static">
                 <Toolbar>
-                    <Typography variant="h6">Сводка футбольного матча</Typography>
+                    <Typography variant="h6" textAlign={'center'} width={'100%'}>Сводка футбольного матча</Typography>
                 </Toolbar>
             </AppBar>
 
             <Container sx={{ mt: 4 }}>
-                {!matchStarted && timer === 0 && currentHalf === 1 && !halfEnded && (
+                {/* Начальные настройки матча */}
+                {!matchStarted && timer === 0 && currentHalf === 1 && !halfEnded && !matchEnded && (
                     <Box component="form" sx={{ mb: 4 }}>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
@@ -229,6 +316,7 @@ function Main_block() {
                                     label="Количество таймов"
                                     type="number"
                                     value={halves}
+                                    required
                                     onChange={e => setHalves(Number(e.target.value))}
                                 />
                             </Grid>
@@ -238,6 +326,7 @@ function Main_block() {
                                     label="Время тайма (минуты)"
                                     type="number"
                                     value={halfDuration}
+                                    required
                                     onChange={e => setHalfDuration(Number(e.target.value))}
                                 />
                             </Grid>
@@ -246,6 +335,7 @@ function Main_block() {
                                     fullWidth
                                     label="Название команды А"
                                     value={teamAName}
+                                    required
                                     onChange={e => setTeamAName(e.target.value)}
                                 />
                             </Grid>
@@ -254,6 +344,7 @@ function Main_block() {
                                     fullWidth
                                     label="Название команды Б"
                                     value={teamBName}
+                                    required
                                     onChange={e => setTeamBName(e.target.value)}
                                 />
                             </Grid>
@@ -269,22 +360,59 @@ function Main_block() {
                     </Box>
                 )}
 
-                {(matchStarted || timer > 0 || halfEnded) && (
+                {/* Основной контент матча */}
+                {(matchStarted || timer > 0 || halfEnded || matchEnded) && (
                     <Box>
-                        <Typography variant="h5" sx={{ mb: 2 }}>
-                            Время матча: {Math.floor(Math.min(timer, halfDuration * 60) / 60)}:{(Math.min(timer, halfDuration * 60) % 60).toString().padStart(2, '0')}
-                            {inExtraTime && (
-                                <span style={{ color: 'red' }}>
-                                    {' + '}{Math.floor((timer - halfDuration * 60) / 60)}:{((timer - halfDuration * 60) % 60).toString().padStart(2, '0')}
-                                </span>
-                            )}
-                        </Typography>
-                        <Typography variant="h6" sx={{ mb: 2 }}>
-                            Текущий тайм: {currentHalf}
-                        </Typography>
+                        {/* Отображение таймера и текущего тайма, если матч не завершен */}
+                        {!matchEnded && (
+                            <>
+                                <Typography variant="h5" sx={{ mb: 2 }}>
+                                    Время матча: {Math.floor(Math.min(timer, halfDuration * 60) / 60)}:{(Math.min(timer, halfDuration * 60) % 60).toString().padStart(2, '0')}
+                                    {inExtraTime && (
+                                        <span style={{ color: 'red' }}>
+                                            {' + '}{Math.floor((timer - halfDuration * 60) / 60)}:{((timer - halfDuration * 60) % 60).toString().padStart(2, '0')}
+                                        </span>
+                                    )}
+                                </Typography>
+                                <Typography variant="h6" sx={{ mb: 2 }}>
+                                    Текущий тайм: {currentHalf}
+                                </Typography>
+                            </>
+                        )}
 
-                        {/* Если тайм завершен и есть следующий тайм */}
-                        {!matchStarted && halfEnded && currentHalf <= halves && (
+                        {/* Отображение после завершения матча */}
+                        {matchEnded && (
+                            <Box sx={{ mt: 4 }}>
+                                <Typography variant="h4" align="center">
+                                    Матч окончен
+                                </Typography>
+                                <Typography variant="h5" align="center" gutterBottom>
+                                    {teamAName} : {teamBName} <br />
+                                    {teamAScore} : {teamBScore}
+                                </Typography>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={shareMatchStats}
+                                        sx={{ mr: 2 }}
+                                    >
+                                        Поделиться
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={finishMatch}
+                                    >
+                                        Начать новый матч
+                                    </Button>
+                                </Box>
+                            </Box>
+                        )}
+
+                        {/* Если тайм завершен и матч не окончен */}
+                        {!matchStarted && halfEnded && !matchEnded && (
                             <Box sx={{ mt: 4 }}>
                                 <Button
                                     variant="contained"
@@ -293,26 +421,27 @@ function Main_block() {
                                 >
                                     Начать новый тайм
                                 </Button>
-                                <Button
+                                {/* <Button
                                     variant="contained"
                                     color="secondary"
                                     sx={{ ml: 2 }}
                                     onClick={finishMatch}
                                 >
                                     Завершить матч
-                                </Button>
+                                </Button> */}
                             </Box>
                         )}
 
-                        {matchStarted && (
+                        {/* Отображение управления матчем и событий */}
+                        {matchStarted && !matchEnded && (
                             <>
                                 <Grid container spacing={4} alignItems="center">
-                                    {/* Команда А */}
+                                    {/*  */}
                                     <Grid item xs={5}>
                                         <Typography variant="h6" align="center">{teamAName}</Typography>
                                         <Box display="flex" flexDirection="column" alignItems="center">
                                             {renderActionButton('/goal.png', 'Гол', () => handleEvent('Гол', teamAName))}
-                                            {renderActionButton('/change.png', 'Замена', () => handleEvent('Замена', teamAName))}
+                                            {/* {renderActionButton('/change.png', 'Замена', () => handleEvent('Замена', teamAName))} */}
                                             {renderActionButton('/YC.png', 'ЖК', () => handleEvent('Желтая карточка', teamAName))}
                                             {renderActionButton('/RC.png', 'КК', () => handleEvent('Красная карточка', teamAName))}
                                         </Box>
@@ -322,12 +451,12 @@ function Main_block() {
                                         <Typography variant="h6" align="center">VS</Typography>
                                     </Grid>
 
-                                    {/* Команда Б */}
+                                    {/*  */}
                                     <Grid item xs={5}>
                                         <Typography variant="h6" align="center">{teamBName}</Typography>
                                         <Box display="flex" flexDirection="column" alignItems="center">
                                             {renderActionButton('/goal.png', 'Гол', () => handleEvent('Гол', teamBName))}
-                                            {renderActionButton('/change.png', 'Замена', () => handleEvent('Замена', teamBName))}
+                                            {/* {renderActionButton('/change.png', 'Замена', () => handleEvent('Замена', teamBName))} */}
                                             {renderActionButton('/YC.png', 'ЖК', () => handleEvent('Желтая карточка', teamBName))}
                                             {renderActionButton('/RC.png', 'КК', () => handleEvent('Красная карточка', teamBName))}
                                         </Box>
@@ -346,13 +475,13 @@ function Main_block() {
                                             Завершить тайм
                                         </Button>
                                     )}
-                                    <Button
+                                    {/* <Button
                                         variant="contained"
                                         color="secondary"
                                         onClick={finishMatch}
                                     >
                                         Завершить матч
-                                    </Button>
+                                    </Button> */}
                                 </Box>
                             </>
                         )}
@@ -361,7 +490,7 @@ function Main_block() {
 
                 {/* Кнопка для отображения событий */}
                 {events.length > 0 && (
-                    <Box sx={{ mt: 4 }}>
+                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', position: 'absolute', left: '50%', bottom: '20px', transform: 'translateX(-50%)', width: '100%' }}>
                         <Button
                             variant="outlined"
                             color="primary"
@@ -372,7 +501,7 @@ function Main_block() {
                     </Box>
                 )}
 
-                {/* Модальное окно для событий */}
+                {/* Модальное окно для добавления события */}
                 <Dialog open={showModal} onClose={() => setShowModal(false)}>
                     <DialogTitle>{`Добавить событие: ${currentEvent.type}`}</DialogTitle>
                     <DialogContent>
@@ -380,7 +509,8 @@ function Main_block() {
                             {currentEvent.type !== 'Замена' && (
                                 <TextField
                                     margin="dense"
-                                    label="Игрок"
+                                    label="Номер игрока"
+                                    type="number"
                                     fullWidth
                                     required
                                     onChange={e => setCurrentEvent({ ...currentEvent, player: e.target.value })}
@@ -389,7 +519,8 @@ function Main_block() {
                             {currentEvent.type === 'Гол' && (
                                 <TextField
                                     margin="dense"
-                                    label="Ассистент"
+                                    label="Номер ассистента"
+                                    type="number"
                                     fullWidth
                                     onChange={e => setCurrentEvent({ ...currentEvent, assistant: e.target.value })}
                                 />
@@ -398,14 +529,16 @@ function Main_block() {
                                 <>
                                     <TextField
                                         margin="dense"
-                                        label="Игрок ушел"
+                                        label="Игрок ушел под номером"
                                         fullWidth
+                                        type="number"
                                         required
                                         onChange={e => setCurrentEvent({ ...currentEvent, playerOut: e.target.value })}
                                     />
                                     <TextField
                                         margin="dense"
-                                        label="Игрок вошел"
+                                        label="Игрок вошел под номером"
+                                        type="number"
                                         fullWidth
                                         required
                                         onChange={e => setCurrentEvent({ ...currentEvent, playerIn: e.target.value })}
@@ -424,28 +557,10 @@ function Main_block() {
                 <Dialog open={showEventsModal} onClose={() => setShowEventsModal(false)}>
                     <DialogTitle>События матча</DialogTitle>
                     <DialogContent>
-                        {/* Вычисление счета */}
-                        {(() => {
-                            let teamAScore = 0;
-                            let teamBScore = 0;
-
-                            events.forEach(event => {
-                                if (event.type === 'Гол') {
-                                    if (event.team === teamAName) {
-                                        teamAScore += 1;
-                                    } else if (event.team === teamBName) {
-                                        teamBScore += 1;
-                                    }
-                                }
-                            });
-
-                            return (
-                                <Typography variant="h5" align="center" gutterBottom>
-                                    {teamAName} : {teamBName} <br />
-                                    {teamAScore} : {teamBScore} 
-                                </Typography>
-                            );
-                        })()}
+                        <Typography variant="h5" align="center" gutterBottom>
+                            {teamAName} : {teamBName} <br />
+                            {teamAScore} : {teamBScore}
+                        </Typography>
                         <List>
                             {events.map((event, index) => (
                                 <React.Fragment key={index}>
