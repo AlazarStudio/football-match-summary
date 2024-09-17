@@ -215,25 +215,28 @@ function Main_block() {
 
     // Функция для завершения матча и сброса всех состояний
     const finishMatch = () => {
-        // Очистка состояния матча
-        localStorage.removeItem('matchState');
-        // Сброс состояний
-        setMatchStarted(false);
-        setTimer(0);
-        setElapsedTime(0);
-        setMatchStartTime(null);
-        setHalves(2);
-        setHalfDuration(25);
-        setTeamAName('');
-        setTeamBName('');
-        setEvents([]);
-        setExtraTime(0);
-        setTotalMatchTime(0);
-        setCurrentHalf(1);
-        setInExtraTime(false);
-        setHalfEnded(false);
-        setMatchEnded(false);
-        // alert('Матч завершен');
+        let access = confirm('Все данные текущего матча будут удалены. Вы уверены?')
+        if (access) {
+            // Очистка состояния матча
+            localStorage.removeItem('matchState');
+            // Сброс состояний
+            setMatchStarted(false);
+            setTimer(0);
+            setElapsedTime(0);
+            setMatchStartTime(null);
+            setHalves(2);
+            setHalfDuration(25);
+            setTeamAName('');
+            setTeamBName('');
+            setEvents([]);
+            setExtraTime(0);
+            setTotalMatchTime(0);
+            setCurrentHalf(1);
+            setInExtraTime(false);
+            setHalfEnded(false);
+            setMatchEnded(false);
+            // alert('Матч завершен');
+        }
     };
 
     // Функция для копирования статистики и отправки в Telegram
@@ -276,8 +279,8 @@ function Main_block() {
 
             // Открываем Telegram с предзаполненным сообщением
             // const telegramUrl = `https://t.me/share/url?@urtenovcom=&text=${encodeURIComponent(matchStats)}`;
-            const telegramUrl = `https://web.telegram.org/#/im?p=@urtenovcom`;
-            window.open(telegramUrl, '_blank');
+            // const telegramUrl = `https://web.telegram.org/#/im?p=@urtenovcom`;
+            // window.open(telegramUrl, '_blank');
         }, (err) => {
             console.error('Ошибка при копировании в буфер обмена: ', err);
         });
@@ -367,20 +370,24 @@ function Main_block() {
                         {/* Отображение таймера и текущего тайма, если матч не завершен */}
                         {!matchEnded && (
                             <>
-                                <Typography variant="h5" sx={{ mb: 2 }}>
-                                    Время матча: {Math.floor(Math.min(timer, halfDuration * 60) / 60)}:{(Math.min(timer, halfDuration * 60) % 60).toString().padStart(2, '0')}
-                                    {inExtraTime && (
-                                        <span style={{ color: 'red' }}>
-                                            {' + '}{Math.floor((timer - halfDuration * 60) / 60)}:{((timer - halfDuration * 60) % 60).toString().padStart(2, '0')}
-                                        </span>
-                                    )}
+                                <Typography variant="h7" sx={{ mb: 2 }}>
+                                    Время матча: <b>{Math.floor(Math.min(timer, halfDuration * 60) / 60)}:{(Math.min(timer, halfDuration * 60) % 60).toString().padStart(2, '0')}
+                                        {inExtraTime && (
+                                            <span style={{ color: 'red' }}>
+                                                {' + '}{Math.floor((timer - halfDuration * 60) / 60)}:{((timer - halfDuration * 60) % 60).toString().padStart(2, '0')}
+                                            </span>
+                                        )}</b>
                                 </Typography>
-                                <Typography variant="h6" sx={{ mb: 2 }}>
-                                    Текущий тайм: {currentHalf}
+                                <br />
+                                <br />
+                                <Typography variant="h7" sx={{ mb: 2 }}>
+                                    Текущий тайм: <b>{currentHalf}</b>
                                 </Typography>
                             </>
                         )}
-
+                        <br />
+                        <br />
+                        <br />
                         {/* Отображение после завершения матча */}
                         {matchEnded && (
                             <Box sx={{ mt: 4 }}>
@@ -476,13 +483,14 @@ function Main_block() {
                                             Завершить тайм
                                         </Button>
                                     )}
-                                    {/* <Button
+                                    <Button
                                         variant="contained"
                                         color="secondary"
                                         onClick={finishMatch}
+                                        sx={{ display: 'flex', position: 'absolute', right: '20px', top: '85px', 'font-size': '10px' }}
                                     >
-                                        Завершить матч
-                                    </Button> */}
+                                        Завершить
+                                    </Button>
                                 </Box>
                             </>
                         )}
