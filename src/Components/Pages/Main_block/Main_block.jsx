@@ -522,7 +522,7 @@ function Main_block() {
                         </Button> */}
                         <Typography variant="h5" align="center" gutterBottom>События матча</Typography>
                         {/* Контейнер с фиксированной высотой и прокруткой */}
-                        <Box sx={{ width: '100%', maxHeight: '260px', overflowY: 'scroll' }}>
+                        <Box sx={{ width: '100%', maxHeight: '220px', overflowY: 'scroll' }}>
                             <List>
                                 {events.slice().reverse().map((event, index) => (  // Обратный порядок событий
                                     <React.Fragment key={index}>
