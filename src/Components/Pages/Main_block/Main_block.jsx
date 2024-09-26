@@ -301,7 +301,7 @@ function Main_block() {
     });
 
 
-    
+
 
     return (
         <Box>
@@ -459,7 +459,17 @@ function Main_block() {
                                     </Grid>
 
                                     <Grid item xs={2}>
-                                        <Typography variant="h6" align="center">VS</Typography>
+                                        <Box display="flex" alignItems="center" justifyContent="center">
+                                            <Typography variant="h4" sx={{ fontWeight: 'bold', marginX: '2px' }}>
+                                                {teamAScore}
+                                            </Typography>
+                                            <Typography variant="h5" sx={{ fontWeight: 'bold', marginX: '2px' }}>
+                                                :
+                                            </Typography>
+                                            <Typography variant="h4" sx={{ fontWeight: 'bold', marginX: '2px' }}>
+                                                {teamBScore}
+                                            </Typography>
+                                        </Box>
                                     </Grid>
 
                                     {/*  */}
@@ -502,14 +512,44 @@ function Main_block() {
 
                 {/* Кнопка для отображения событий */}
                 {events.length > 0 && (
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', position: 'absolute', left: '50%', bottom: '20px', transform: 'translateX(-50%)', width: '100%' }}>
-                        <Button
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+                        {/* <Button
                             variant="outlined"
                             color="primary"
                             onClick={() => setShowEventsModal(true)}
                         >
                             Просмотреть события матча
-                        </Button>
+                        </Button> */}
+                        <Typography variant="h5" align="center" gutterBottom>События матча</Typography>
+                        {/* Контейнер с фиксированной высотой и прокруткой */}
+                        <Box sx={{ width: '100%', maxHeight: '260px', overflowY: 'scroll' }}>
+                            <List>
+                                {events.slice().reverse().map((event, index) => (  // Обратный порядок событий
+                                    <React.Fragment key={index}>
+                                        <ListItem alignItems="flex-start" sx={{ paddingLeft: 0, paddingRight: 0 }}>
+                                            <ListItemText
+                                                primary={`${event.time}${event.extraTime ? ` + ${event.extraTime}` : ''} - Тайм ${event.half} - ${event.team}`}
+                                                secondary={
+                                                    <>
+                                                        <Typography component="span" variant="body2" color="textPrimary">
+                                                            {event.type}
+                                                        </Typography>
+                                                        {" — "}
+                                                        {event.type === 'Замена' ? (
+                                                            `Ушел: ${event.playerOut}, Вошел: ${event.playerIn}`
+                                                        ) : (
+                                                            `${event.player}`
+                                                        )}
+                                                        {event.assistant && ` (Ассистент: ${event.assistant})`}
+                                                    </>
+                                                }
+                                            />
+                                        </ListItem>
+                                        {index < events.length - 1 && <Divider component="li" />}
+                                    </React.Fragment>
+                                ))}
+                            </List>
+                        </Box>
                     </Box>
                 )}
 
@@ -573,37 +613,41 @@ function Main_block() {
                             {teamAName} : {teamBName} <br />
                             {teamAScore} : {teamBScore}
                         </Typography>
-                        <List>
-                            {events.map((event, index) => (
-                                <React.Fragment key={index}>
-                                    <ListItem alignItems="flex-start" sx={{ paddingLeft: 0, paddingRight: 0 }}>
-                                        <ListItemText
-                                            primary={`${event.time}${event.extraTime ? ` + ${event.extraTime}` : ''} - Тайм ${event.half} - ${event.team}`}
-                                            secondary={
-                                                <>
-                                                    <Typography component="span" variant="body2" color="textPrimary">
-                                                        {event.type}
-                                                    </Typography>
-                                                    {" — "}
-                                                    {event.type === 'Замена' ? (
-                                                        `Ушел: ${event.playerOut}, Вошел: ${event.playerIn}`
-                                                    ) : (
-                                                        `${event.player}`
-                                                    )}
-                                                    {event.assistant && ` (Ассистент: ${event.assistant})`}
-                                                </>
-                                            }
-                                        />
-                                    </ListItem>
-                                    {index < events.length - 1 && <Divider component="li" />}
-                                </React.Fragment>
-                            ))}
-                        </List>
+                        {/* Контейнер с фиксированной высотой и прокруткой */}
+                        <Box sx={{ maxHeight: '300px', overflowY: 'scroll' }}>
+                            <List>
+                                {events.slice().reverse().map((event, index) => (  // Обратный порядок событий
+                                    <React.Fragment key={index}>
+                                        <ListItem alignItems="flex-start" sx={{ paddingLeft: 0, paddingRight: 0 }}>
+                                            <ListItemText
+                                                primary={`${event.time}${event.extraTime ? ` + ${event.extraTime}` : ''} - Тайм ${event.half} - ${event.team}`}
+                                                secondary={
+                                                    <>
+                                                        <Typography component="span" variant="body2" color="textPrimary">
+                                                            {event.type}
+                                                        </Typography>
+                                                        {" — "}
+                                                        {event.type === 'Замена' ? (
+                                                            `Ушел: ${event.playerOut}, Вошел: ${event.playerIn}`
+                                                        ) : (
+                                                            `${event.player}`
+                                                        )}
+                                                        {event.assistant && ` (Ассистент: ${event.assistant})`}
+                                                    </>
+                                                }
+                                            />
+                                        </ListItem>
+                                        {index < events.length - 1 && <Divider component="li" />}
+                                    </React.Fragment>
+                                ))}
+                            </List>
+                        </Box>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setShowEventsModal(false)}>Закрыть</Button>
                     </DialogActions>
                 </Dialog>
+
             </Container>
         </Box>
     );
